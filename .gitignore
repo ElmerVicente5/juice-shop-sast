@@ -1,3 +1,13 @@
+# ===== Logs y temporales =====
+*.log
+npm-debug.log*
+.DS_Store
+
+# ===== Reportes locales de Bearer (SAST) =====
+*.sarif
+reports/
+
+
 # App
 node_modules/
 *.sqlite
@@ -71,3 +81,7 @@ config/*.yml
 # Misc
 .playwright-mcp/
 cypress/screenshots/
+
+
+
+
