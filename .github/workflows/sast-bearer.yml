@@ -2,7 +2,7 @@ name: SAST con Bearer CLI # Nombre del pipeline en GitHub Actions.
 
 on: # Define los eventos que activan el pipeline.
   push: # Ejecuta el análisis cuando se suben cambios.
-    branches: [main] # Solo para la rama principal.
+    branches: [main, feature/pipeline-sast] # incluye ambas ramas
   pull_request: # Ejecuta el análisis al crear o actualizar un PR.
     branches: [main] # Solo para PR dirigidos a main.
   workflow_dispatch: # Permite ejecutar el pipeline manualmente.
