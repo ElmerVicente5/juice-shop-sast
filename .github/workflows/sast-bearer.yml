@@ -1,0 +1,53 @@
+name: SAST con Bearer CLI # Nombre del pipeline en GitHub Actions.
+
+on: # Define los eventos que activan el pipeline.
+  push: # Ejecuta el análisis cuando se suben cambios.
+    branches: [main] # Solo para la rama principal.
+  pull_request: # Ejecuta el análisis al crear o actualizar un PR.
+    branches: [main] # Solo para PR dirigidos a main.
+  workflow_dispatch: # Permite ejecutar el pipeline manualmente.
+
+permissions: # Define los permisos mínimos del workflow.
+  contents: read # Permite leer el código del repositorio.
+  security-events: write # Permite publicar alertas de seguridad.
+
+jobs: # Define los trabajos del pipeline.
+  sast: # Identificador del trabajo SAST.
+    runs-on: ubuntu-latest # Utiliza un servidor Ubuntu de GitHub.
+    steps: # Define los pasos que se ejecutarán.
+      - name: Obtener codigo # Identifica el paso de descarga.
+        uses: actions/checkout@v4 # Descarga el repositorio.
+
+      - name: Crear carpeta de reportes # Prepara el directorio.
+        run: mkdir -p reports # Crea la carpeta para los reportes.
+
+      - name: Analisis SAST con Bearer # Ejecuta el análisis.
+        uses: bearer/bearer-action@v2 # Utiliza la acción oficial.
+        with: # Configura los parámetros de Bearer.
+          path: . # Analiza el repositorio completo.
+          format: sarif # Genera un reporte SARIF.
+          output: reports/results.sarif # Guarda el reporte SARIF.
+          exit-code: "0" # No falla solo por detectar vulnerabilidades.
+
+      - name: Generar reporte HTML # Crea el reporte visual.
+        if: always() # Intenta ejecutarlo aunque falle un paso anterior.
+        uses: bearer/bearer-action@v2 # Ejecuta Bearer nuevamente.
+        with: # Establece los parámetros de análisis.
+          path: . # Analiza el código del repositorio.
+          format: html # Genera un reporte HTML.
+          output: reports/report.html # Guarda el reporte HTML.
+          exit-code: "0" # No falla solo por los hallazgos.
+
+      - name: Publicar resultados SARIF # Publica los hallazgos.
+        if: always() # Intenta publicar aunque haya fallos previos.
+        uses: github/codeql-action/upload-sarif@v4 # Sube el reporte.
+        with: # Configura la publicación del SARIF.
+          sarif_file: reports/results.sarif # Indica el archivo SARIF.
+
+      - name: Guardar reporte HTML # Conserva el reporte descargable.
+        if: always() # Intenta guardarlo aunque haya fallos.
+        uses: actions/upload-artifact@v4 # Publica el artefacto.
+        with: # Configura el archivo para descargar.
+          name: reporte-bearer-html # Nombre del artefacto.
+          path: reports/report.html # Archivo HTML generado.
+          if-no-files-found: warn # Advierte si no existe el reporte.
